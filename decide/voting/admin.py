@@ -2,7 +2,10 @@ from django.contrib import admin, messages
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.utils import timezone
+from django.urls import path
+
 from xlrd import XLRDError
+from . import views
 
 from .forms import ImportSenateCandidates
 
@@ -46,7 +49,7 @@ def deleteAll(ModelAdmin, request, queryset):
 
 class QuestionOptionInline(admin.TabularInline):
     model = QuestionOption
-    fields = ['question', 'option']
+    fields = ['question', 'option', 'gender']
 
 
 class QuestionAdmin(admin.ModelAdmin):
@@ -62,6 +65,13 @@ class VotingAdmin(admin.ModelAdmin):
     search_fields = ('name', )
 
     actions = [start, stop, tally, deleteAll]
+    change_list_template = 'voting/change_list.html'
+
+    def get_urls(self):
+        urls = super().get_urls()
+        urls = [path('export_candidates/', views.export_candidates,
+                     name='export_candidates'), ] + urls
+        return urls
 
     def add_view(self, request, form_url='', extra_context=None):
         if request.method == 'POST':
@@ -89,7 +99,7 @@ class VotingAdmin(admin.ModelAdmin):
         context = dict(title='Import votings')
         context.update(extra_context or {})
 
-        return render(request, 'import_form.html', context)
+        return render(request, 'voting/import_form.html', context)
 
     def delete_model(self, request, obj):
         votes = Vote.objects.all()

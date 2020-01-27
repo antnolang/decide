@@ -1,124 +1,64 @@
-############################################################ 
-## Variables:                                              # 
-##                                                         # 
-## DEPLOY_TRAVIS ------> 1 para activar releases           # 
-## USER_TRAVIS --------> usuario de github                 # 
-## EMAIL_TRAVIS -------> email de github                   # 
-## MILESTONE_TRAVIS ---> número de milestone               # 
-## NOMBRE_ZIP ---------> decide                            # 
-## RAMA_TRAVIS --------> master                            # 
-## TOKEN_TRAVIS -------> token personal sin encriptar      # 
-## HEROKU_APP_NAME ----> nombre de la app en heroku        # 
-## HEROKU_API_KEY -----> api key de heroku del usuario     # 
-############################################################ 
- 
-language: python 
- 
-python: 
-  - 3.6 
- 
-dist: xenial 
- 
-services: 
-  - postgresql 
-  - xvfb
- 
-addons: 
-  postgresql: "9.4" 
- 
-env: 
-  - DJANGO_SETTINGS_MODULE="decide.settings" MOZ_HEADLESS=1
- 
-notifications: 
-  email: false   
-   
-jobs: 
-  include: 
-    - stage: "running tests" 
-      if: (branch != production) AND (NOT(branch =~ ^M$MILESTONE_TRAVIS-build)) 
-      before_install:
-        - sudo apt-get update
-        - sudo apt-get install dbus-x11
-        - export DISPLAY=:99.0
-        - export CHROME_BIN=/usr/bin/google-chrome
-        - sudo apt-get install -y libappindicator1 fonts-liberation
-        - wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-        - sudo dpkg -i google-chrome*.deb
-        - wget https://chromedriver.storage.googleapis.com/2.38/chromedriver_linux64.zip
-        - unzip chromedriver_linux64.zip
-        - sudo cp chromedriver /usr/bin
-      install: 
-        - pip install -r requirements.txt 
-        - pip install codacy-coverage 
-        - pip install flake8 
-      before_script: 
-        - psql -U postgres -c "create user decide password 'decide'" 
-        - psql -U postgres -c "create database test_decide owner decide" 
-        - psql -U postgres -c "ALTER USER decide CREATEDB" 
-      script: 
-        - cd decide 
-        - coverage run --branch --source=. ./manage.py test --keepdb --with-xunit 
-        - coverage xml 
-        - python-codacy-coverage -r coverage.xml 
-        - flake8 --select E501,E265,E225 . --exit-zero --exclude .git,__pycache__,docs/source/conf.py,old,build,dist,./mixnet/migrations/,./base/migrations/,./store/migrations/,./census/migrations/,./voting/migrations/    
-    - stage: "deploy to github - release" 
-      if: (branch != production) AND (NOT(branch =~ ^M$MILESTONE_TRAVIS-build)) 
-      script: 
-        - if [[ $TRAVIS_BRANCH == $RAMA_TRAVIS ]] && [[ $DEPLOY_TRAVIS == "1" ]]; then git archive --format zip --output ./$NOMBRE_ZIP.zip $RAMA_TRAVIS; echo "Zip generado correctamente."; fi 
-      before_deploy: 
-        - git config --local user.name $USER_TRAVIS 
-        - git config --local user.email $EMAIL_TRAVIS 
-        - export YEAR=`date +"%Y"`   
-        - export GIT_TAG=M$MILESTONE_TRAVIS-build.$TRAVIS_BUILD_NUMBER-$YEAR 
-        - git tag -a $GIT_TAG -m "Generated tag from TravisCI build $TRAVIS_BUILD_NUMBER" 
-      deploy: 
-          provider: releases 
-          api-key: 
-            secure: $TOKEN_TRAVIS 
-          file: "./$NOMBRE_ZIP.zip" 
-          on: 
-            branch: $RAMA_TRAVIS 
-            condition: $DEPLOY_TRAVIS = 1 
-            tags: false 
-    - stage: "deploy to github - production" 
-      if: (branch = master) AND (NOT(branch =~ ^M$MILESTONE_TRAVIS-build)) 
-      install: 
-        - pip install -r travis_requirements.txt 
-      script: 
-        - git checkout -qfb production 
-        - git status 
-        - cp -f travis_requirements.txt requirements.txt 
-        - rm -f travis_requirements.txt 
-        - cd decide 
-        - cp travis_local_settings.py local_settings.py 
-        - cd decide 
-        - cp -f travis_settings.py settings.py 
-        - rm -f travis_settings.py 
-        - git config --local user.name $USER_TRAVIS 
-        - git config --local user.email $EMAIL_TRAVIS 
-        - git status 
-        - git commit --all -m "Generated commit from TravisCI build $TRAVIS_BUILD_NUMBER" 
-        - git push -q --force https://$TOKEN_TRAVIS@github.com/decide-dialga/decide.git production 
-    - stage: "deploy to heroku" 
-      if: (branch = production) 
-      install: 
-        - pip install -r requirements.txt 
-      before_script: 
-        - psql -U postgres -c "create user decide password 'decide'" 
-        - psql -U postgres -c "create database test_decide owner decide" 
-        - psql -U postgres -c "ALTER USER decide CREATEDB" 
-      script: 
-        - git config --local user.name $USER_TRAVIS 
-        - git config --local user.email $EMAIL_TRAVIS 
-        - cd decide 
-        - cp travis_local_settings.py local_settings.py 
-      deploy:
-        provider: heroku
-        app:
-          master: "$HEROKU_APP_NAME"
-          production: "$HEROKU_APP_NAME"
-        strategy: git
-        api_key: "$HEROKU_API_KEY"
-        on:
-          all_branches: true
-        cleanup: false 
+dist: xenial
+branches:
+  except:
+  - "/^M\\d-build\\.\\d*\\-\\d*$/"
+services:
+- postgresql
+- xvfb
+addons:
+  postgresql: '9.4'
+env:
+- DJANGO_SETTINGS_MODULE="decide.travis_settings"
+before_script:
+- psql -U postgres -c "create user decide password 'decide'"
+- psql -U postgres -c "create database decide owner decide"
+- psql -U postgres -c "ALTER USER decide CREATEDB"
+language: python
+python:
+- '3.6'
+before_install:
+- sudo apt-get update
+- sudo apt-get install dbus-x11
+- export DISPLAY=:99.0
+- export CHROME_BIN=/usr/bin/google-chrome
+- sudo apt-get install -y libappindicator1 fonts-liberation
+- wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+- sudo dpkg -i google-chrome*.deb
+- wget https://chromedriver.storage.googleapis.com/2.38/chromedriver_linux64.zip
+- unzip chromedriver_linux64.zip
+- sudo cp chromedriver /usr/bin
+install:
+- pip install -r requirements.txt
+- pip install codacy-coverage
+- pip install flake8
+script:
+- cd decide
+- coverage run --branch --source=. ./manage.py test --keepdb --with-xunit
+- coverage xml --fail-under 70
+- python-codacy-coverage -r coverage.xml
+- flake8 --select E501,E265,E225 . --exclude __pycache__,./*/migrations/,./decide/
+before_deploy:
+  if ! [ "$IS_TAGGED" ]; then
+    export IS_TAGGED=1;
+    git config --local user.name $USER_TRAVIS;
+    git config --local user.email $EMAIL_TRAVIS;
+    export YEAR=`date +"%Y"`;
+    export GIT_TAG=M$MILESTONE_TRAVIS-build.$TRAVIS_BUILD_NUMBER-$YEAR;
+    git tag -a $GIT_TAG -m "Generated tag from TravisCI build $TRAVIS_BUILD_NUMBER";
+  fi
+deploy:
+  - provider: releases
+    api_key:
+      secure: AXsmgKZuSNcgild8zA9nlG9GXsChbYoZKmMoUm3xAy+8GpkjCircPu6TuPZu80zDUyqq38n2LIR743sEEM3Zuo8rrHCed66aCsaRwPs/p2GvXYiFHJx7UkubHHQnC7RdEuRK2viFFDo+EplVUa40Ibq8MpK8TK4nAOnB8IK1bfioUws0WLHx9/s89wnGveruIsD/IGkFWN0jAiHDbKudgS3gIyZGW9lbN2MrrehxDPEVnxrF6gNe3LPGgb6HvVNyIgTtwnHA9TmbGBagOfSfemQcYGNzLNdMJ2pzbNjbhdTZoW8rbtUbJP/YCEkjUE+QGYWPhA7z7hTsvXvgz7JHfW9yu4XrZeuCFmqLfKbl3dtxZ/GInNadJsVNOw9LqeD4ONnGooZMD1kaj5FXy4CbSLhozIx9V/UM1MoHRxi538NNi9217w4Cm07Y5oFAIRnpXkKfBSbO1BncdIk0622AoIYpHCtUDvIOZ18zT4QR7rvemzTOFbYLFoCUiJT70a0/w039fW2+FLbQ3t36YIucXO/Tx/aTRxg9Z7+l/oOE9JY4A4DduJLhA7463sFfIonMMiqKnUNBXhR2XBqDWQdzBzde2CvW/ds1uncbcHlHJxg/ddWxyUIRPVDBZyzyV5eTBNN+KIET0MeJCF5BOLRDPXUvfeX3+fxlie9gRACDjro=
+    file: "$NOMBRE_ZIP.zip"
+    on:
+      branch: master
+      repo: antnolang/decide
+  - provider: heroku
+    app: "decide-dialga-votacion-m4"
+    strategy: git
+    api_key:
+      secure: DF0FTrUoqm0bCIaoabe+E851l8LRt6n05IGaUp01+UBIKxRnwEIItzj7Te6IOUBstjWutyvMV/gOpKspzakJIyVPNJFJCTxCa6RnMCW37KXOzWnVS6e52I0doqpVI1tMrdktuJvMMHlIsvBtSL1B7vltop/N4UsHbiAupZ4aAyoP4pPwDjlTPNVcZGnrVtBo1BhGgtGtfhnN2zz40SQ1Wnf0ISfrMhqqVHGWy65oZCS2sZSPI9I+Dazxpyuo2rBbp5s7GWNI3etpGhNMi8wpJJ7NH5kY8sZGUGPYc0u+cGVVntxOmLuvXPynaU2yRNKnfn+tcMmKsWeygbXE8ACVToXpGfwWlo3CZWjz/SdtQWC9eq1DiTnr9mIqg6NUPIVSvxpJ61eCRRDvm3EIbVa1gOxiJFgBGo5juglgqTSjF27V4+gipzrXVptI9uzfTlfveMYEM3WN5WX+DCa5Y5IYuPP9iMotRdH4VBBiy0jnUAb7SOI8hN+Wo2LgJkQLDKtOKcVb1UbqNkEwR8Xaq1EM1zqVtECtDDjc06YgbO/UHJZLyigMHQwETOBaNjxgIJQBOITGHPJkybN0XGaBhHovXWvZaQSSRGQQyMgnBcy6YDko2a98AtnNYtyG9z//NUYzS3OP1ZmiOcaz63EMAcLub826z9GRVTjMVFd+wam47D8=
+    on:
+      branch: master
+      repo: antnolang/decide
