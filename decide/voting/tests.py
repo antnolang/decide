@@ -2,11 +2,8 @@ import random
 import itertools
 from django.utils import timezone
 from django.conf import settings
-# from django.contrib.auth.models import User
 
 from django.test import TestCase
-from rest_framework.test import APIClient
-from rest_framework.test import APITestCase
 
 from base import mods
 from base.tests import BaseTestCase
@@ -15,6 +12,7 @@ from mixnet.mixcrypt import ElGamal
 from mixnet.mixcrypt import MixCrypt
 from mixnet.models import Auth
 from voting.models import Voting, Question, QuestionOption
+from voting import views
 
 from django.contrib.auth import get_user_model
 User = get_user_model()
@@ -248,7 +246,6 @@ class VotingTestCase(BaseTestCase):
         self.assertEqual(response.json(), 'Voting already tallied')
 
     def test_check_inputFile(self):
-
         THIS_FOLDER = os.path.dirname(os.path.abspath(__file__))
         filePath = THIS_FOLDER + '/docs/CandidatesFiles/Candidatos_Senado.xlsx'
         # my_file = os.path.join(THIS_FOLDER + '/docs/CandidatesFiles/',
@@ -282,3 +279,72 @@ class VotingTestCase(BaseTestCase):
         except:
             print('Test negativo de 6 candidatos/provincia/partido político' +
             'yrelación 1/2 correcto')
+
+
+class VotingViewTestCase(TestCase):
+
+    def setUp(self):
+        q1 = Question(desc='Elige un máximo de 2 personas para las listas del '
+                           'senado por Ávila')
+        q1.save()
+        opt11 = QuestionOption(question=q1, option='PSOE: García Mata, Jaime',
+                               gender='H')
+        opt11.save()
+        opt12 = QuestionOption(question=q1, option='PP: López Ugarte, Mohamed',
+                               gender='H')
+        opt12.save()
+        opt13 = QuestionOption(question=q1, option='PP: Samaniego Nolé, María',
+                               gender='M')
+        opt13.save()
+        opt14 = QuestionOption(question=q1, option='PP: Llanos  Plana, Josefa',
+                               gender='M')
+        opt14.save()
+        opt15 = QuestionOption(question=q1, option='PP: Encinas Cuervo, Gonzo',
+                               gender='H')
+        opt15.save()
+
+        q2 = Question(desc='Elige un máximo de 2 personas para las listas del '
+                           'senado por Sevilla')
+        q2.save()
+        opt21 = QuestionOption(question=q2, option='PSOE: Núñez Mata, Mohamed',
+                               gender='H')
+        opt21.save()
+        opt22 = QuestionOption(question=q2, option='PP: López Ugarte, Mohamed',
+                               gender='H')
+        opt22.save()
+        opt23 = QuestionOption(question=q2, option='PP: Anguita Ruiz, María',
+                               gender='M')
+        opt23.save()
+        opt24 = QuestionOption(question=q2, option='PP: Girón Plana, Jaime',
+                               gender='H')
+        opt24.save()
+        opt25 = QuestionOption(question=q2, option='PP: Encinas Cuevas, Gonzo',
+                               gender='H')
+        opt25.save()
+
+        v1 = Voting(name='Votación Senado Ávila', question=q1,
+                    desc='Listas al Senado por Ávila')
+        v1.save()
+
+        v2 = Voting(name='Votación Senado Sevilla', question=q2,
+                    desc='Listas al Senado por Sevilla')
+        v2.save()
+
+        a, _ = Auth.objects.get_or_create(url=settings.BASEURL,
+                                          defaults={'me': True,
+                                                    'name': 'test auth'})
+        a.save()
+        v1.auths.add(a)
+        v2.auths.add(a)
+        super().setUp()
+
+    def tearDown(self):
+        super().tearDown()
+
+    def test_get_candidates(self):
+        data = views.get_candidates()
+        self.assertEqual(type(data), list().__class__)
+        self.assertEqual(len(data), 11)
+        for d in data:
+            self.assertEqual(type(d), list().__class__)
+            self.assertEqual(len(d), 6)

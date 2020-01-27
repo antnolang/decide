@@ -3,7 +3,6 @@ from django.contrib.postgres.fields import JSONField
 from base import mods
 from base.models import Auth, Key
 
-
 import pandas as pd
 
 
@@ -19,6 +18,11 @@ class QuestionOption(models.Model):
      on_delete=models.CASCADE)
     number = models.PositiveIntegerField(blank=True, null=True)
     option = models.TextField()
+    GENDER_CHOICES = (
+        ('H', 'Hombre'),
+        ('M', 'Mujer'),
+    )
+    gender = models.CharField(max_length=1, choices=GENDER_CHOICES)
 
     def save(self):
         if not self.number:
@@ -134,11 +138,11 @@ class Voting(models.Model):
     def checkInputFile(filePath):
         file = pd.read_excel(filePath,sheet_name = 'Hoja1')
         df = pd.DataFrame(file)
-        columns_names = ['Nombre', 'Primer Apellido', 'Segundo Apellido',
-         'Sexo', 'Provincia', 'Partido Político', 'Proceso Primarias']
+        columns_names = ['Nombre', 'Apellidos', 'Sexo', 'Provincia',
+                         'Partido Político', 'Proceso Primarias']
 
         # Comprobación número columnas
-        if len(file.columns) != 7:
+        if len(file.columns) != 6:
             raise AssertionError(
         'El número de columnas del archivo no concuerda con el esperado')
         # Comprobación nombres de columnas
@@ -150,13 +154,12 @@ class Voting(models.Model):
             raise AssertionError('Faltan provincias con candidatos')
         for row in df.iterrows():
             # Comprobación proceso primarias
-            if str(row[1][6]) != "Sí":
+            if str(row[1][5]) != "Sí":
                 raise AssertionError(
             'El candidato con nombre ' + str(row[1][0]) + ' ' 
-            + str(row[1][1]) +
-            ' ' + str(row[1][2]) + ' perteneciente a la provincia ' + str(
-                row[1][4]) + ' del partido ' +
-            str(row[1][5]) + ' no ha pasado por un proceso de primarias.')
+            + str(row[1][1]) + ' perteneciente a la provincia ' + str(
+                row[1][3]) + ' del partido ' + str(row[1][4]) +
+            ' no ha pasado por un proceso de primarias.')
         # Comprobación 6 candidatos/provincia/partido político
         df2 = df.groupby(['Provincia', 'Partido Político'])
         for key, item in df2:
