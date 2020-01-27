@@ -280,5 +280,5 @@ class VotingTestCase(BaseTestCase):
         try:
             Voting.checkInputFile(filePath)
         except:
-            print('Test negativo de 6 candidatos/provincia/partido político'+ 
+            print('Test negativo de 6 candidatos/provincia/partido político' +
             'yrelación 1/2 correcto')

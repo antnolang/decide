@@ -166,7 +166,8 @@ class AuthTestCase(APITestCase):
                                          'email2': 'email.facebook@gmail.com'})
 
         #
-        # response = self.client.post('/authentication/accounts/signup/', data, format='json')
+        # response = self.client.post('/authentication/accounts/signup/',
+        #                             data, format='json')
         # self.assertEqual(response.status_code, 200)
         from django.contrib.messages.middleware import MessageMiddleware
         from django.contrib.sessions.middleware import SessionMiddleware
@@ -177,11 +178,13 @@ class AuthTestCase(APITestCase):
         signup(request)
 
         data = {'username': 'voter10', 'password': '1234ABCD.*'}
-        response = self.client.post('/authentication/login/', data, format='json')
+        response = self.client.post('/authentication/login/', data,
+                                    format='json')
         self.assertEqual(response.status_code, 200)
         token = response.json()
 
-        response = self.client.post('/authentication/getuser/', token, format='json')
+        response = self.client.post('/authentication/getuser/', token,
+                                    format='json')
         self.assertEqual(response.status_code, 200)
 
         user = response.json()
