@@ -8,7 +8,7 @@ from rest_framework.views import APIView
 from rest_framework.authtoken.models import Token
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login, authenticate
-#from django.contrib.auth.models import User
+# from django.contrib.auth.models import User
 from .models import CustomUser
 from django.db import IntegrityError
 from django.shortcuts import get_object_or_404, render, redirect
@@ -31,7 +31,8 @@ def signup(request):
             form.save()
             username = form.cleaned_data.get('username')
             raw_password = form.cleaned_data.get('password1')
-            user = authenticate(request=request, username=username, password=raw_password)
+            user = authenticate(request=request, username=username,
+                                password=raw_password)
             login(request, user)
             return redirect('home')
     else:
@@ -77,6 +78,7 @@ class RegisterView(APIView):
             token, _ = Token.objects.get_or_create(user=user)
         except IntegrityError:
             return Response({}, status=HTTP_400_BAD_REQUEST)
-        return Response({'user_pk': user.pk, 'token': token.key}, HTTP_201_CREATED)
+        return Response({'user_pk': user.pk, 'token': token.key},
+                        HTTP_201_CREATED)
 
 

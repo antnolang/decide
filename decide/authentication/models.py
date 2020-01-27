@@ -15,4 +15,4 @@ class CustomUser(AbstractUser):
 
     # to enforce required fields associated with
     # every user at registration
-    #REQUIRED_FIELDS = ["email"]
+    # REQUIRED_FIELDS = ["email"]

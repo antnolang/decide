@@ -26,7 +26,8 @@ def query(modname, entry_point='/', method='get', baseurl=None, **kwargs):
     >>> r = query('voting', params={'id': 1})
     >>> assert(r[0]['id'] == 1)
 
-    >>> r = query('mixnet', entry_point='/shuffle/1/', json={'msgs': msgs, 'pk': pk})
+    >>> r = query('mixnet', entry_point='/shuffle/1/',
+    >>>                     json={'msgs': msgs, 'pk': pk})
     >>> assert(len(r) == len(msgs))
     '''
 

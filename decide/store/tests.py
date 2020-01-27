@@ -1,6 +1,6 @@
 import datetime
 import random
-#from django.contrib.auth.models import User
+# from django.contrib.auth.models import User
 from django.utils import timezone
 from django.test import TestCase
 from rest_framework.test import APIClient
@@ -36,8 +36,9 @@ class StoreTextCase(BaseTestCase):
         super().tearDown()
 
     def gen_voting(self, pk):
-        voting = Voting(pk=pk, name='v1', question=self.question, start_date=timezone.now(),
-                end_date=timezone.now() + datetime.timedelta(days=1))
+        voting = Voting(pk=pk, name='v1', question=self.question,
+                        start_date=timezone.now(),
+                        end_date=timezone.now() + datetime.timedelta(days=1))
         voting.save()
 
     def get_or_create_user(self, pk):
@@ -117,28 +118,33 @@ class StoreTextCase(BaseTestCase):
         votes = response.json()
 
         self.assertEqual(len(votes), Vote.objects.count())
-        self.assertEqual(votes[0], VoteSerializer(Vote.objects.all().first()).data)
+        self.assertEqual(votes[0], VoteSerializer(Vote.objects.all().first())
+                                                                    .data)
 
     def test_filter(self):
         votings, voters = self.gen_votes()
         v = votings[0]
 
-        response = self.client.get('/store/?voting_id={}'.format(v), format='json')
+        response = self.client.get('/store/?voting_id={}'.format(v),
+                                   format='json')
         self.assertEqual(response.status_code, 401)
 
         self.login(user='noadmin')
-        response = self.client.get('/store/?voting_id={}'.format(v), format='json')
+        response = self.client.get('/store/?voting_id={}'.format(v),
+                                   format='json')
         self.assertEqual(response.status_code, 403)
 
         self.login()
-        response = self.client.get('/store/?voting_id={}'.format(v), format='json')
+        response = self.client.get('/store/?voting_id={}'.format(v),
+                                   format='json')
         self.assertEqual(response.status_code, 200)
         votes = response.json()
 
         self.assertEqual(len(votes), Vote.objects.filter(voting_id=v).count())
 
         v = voters[0]
-        response = self.client.get('/store/?voter_id={}'.format(v), format='json')
+        response = self.client.get('/store/?voter_id={}'.format(v),
+                                   format='json')
         self.assertEqual(response.status_code, 200)
         votes = response.json()
 
@@ -150,15 +156,18 @@ class StoreTextCase(BaseTestCase):
         v = vo.voting_id
         u = vo.voter_id
 
-        response = self.client.get('/store/?voting_id={}&voter_id={}'.format(v, u), format='json')
+        response = self.client.get('/store/?voting_id={}&voter_id={}'
+                                   .format(v, u), format='json')
         self.assertEqual(response.status_code, 401)
 
         self.login(user='noadmin')
-        response = self.client.get('/store/?voting_id={}&voter_id={}'.format(v, u), format='json')
+        response = self.client.get('/store/?voting_id={}&voter_id={}'
+                                   .format(v, u), format='json')
         self.assertEqual(response.status_code, 403)
 
         self.login()
-        response = self.client.get('/store/?voting_id={}&voter_id={}'.format(v, u), format='json')
+        response = self.client.get('/store/?voting_id={}&voter_id={}'
+                                   .format(v, u), format='json')
         self.assertEqual(response.status_code, 200)
         votes = response.json()
 
