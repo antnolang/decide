@@ -2,7 +2,10 @@ from django.contrib import admin, messages
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.utils import timezone
+from django.urls import path
+
 from xlrd import XLRDError
+from . import views
 
 from .forms import ImportSenateCandidates
 
@@ -62,6 +65,13 @@ class VotingAdmin(admin.ModelAdmin):
     search_fields = ('name', )
 
     actions = [start, stop, tally, deleteAll]
+    change_list_template = 'voting/change_list.html'
+
+    def get_urls(self):
+        urls = super().get_urls()
+        urls = [path('export_candidates/', views.export_candidates,
+                     name='export_candidates'), ] + urls
+        return urls
 
     def add_view(self, request, form_url='', extra_context=None):
         if request.method == 'POST':

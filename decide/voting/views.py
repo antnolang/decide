@@ -1,14 +1,65 @@
 import django_filters.rest_framework
 from django.conf import settings
+from django.http import HttpResponse
 from django.utils import timezone
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, status
 from rest_framework.response import Response
+from io import BytesIO as IO
+
+import pandas as pd
+import re
 
 from .models import Question, QuestionOption, Voting
 from .serializers import SimpleVotingSerializer, VotingSerializer
 from base.perms import UserIsStaff
 from base.models import Auth
+
+
+def get_candidates():
+    votings = Voting.objects.all()
+    data = [['Nombre', 'Apellidos', 'Sexo', 'Provincia', 'Partido Político',
+             'Proceso Primarias']]
+
+    for voting in votings:
+        quest = voting.question
+        question_options = QuestionOption.objects.filter(question=quest)
+        for quest_op in question_options:
+            regex = re.compile(r'(.+)\: (.+), (.+)').search(quest_op.option)
+            first_name = regex.group(3).strip()
+            last_name = regex.group(2).strip()
+            gender = quest_op.gender
+            province = re.compile(r'Votación Senado (.+)').search(
+                voting.name).group(1)
+            political_party = regex.group(1).strip()
+            primary = 'Sí'
+            row = [first_name, last_name, gender, province, political_party,
+                   primary]
+            data.append(row)
+
+    return data
+
+
+def export_candidates(request):
+    output = get_candidates()
+    df_output = pd.DataFrame(output)
+    excel_file = IO()
+
+    xlwriter = pd.ExcelWriter(excel_file, engine='xlsxwriter')
+    df_output.to_excel(excel_writer=xlwriter, sheet_name='Hoja1',
+                       index=False, header=False)
+    xlwriter.save()
+    xlwriter.close()
+
+    excel_file.seek(0)
+
+    response = HttpResponse(excel_file.read(),
+                            content_type='application/vnd.openxmlformats-'
+                                         'officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = 'attachment; ' \
+                                      'filename=Candidatos_Senado.xlsx'
+
+    return response
 
 
 class VotingView(generics.ListCreateAPIView):
