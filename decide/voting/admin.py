@@ -46,7 +46,7 @@ def deleteAll(ModelAdmin, request, queryset):
 
 class QuestionOptionInline(admin.TabularInline):
     model = QuestionOption
-    fields = ['question', 'option']
+    fields = ['question', 'option', 'gender']
 
 
 class QuestionAdmin(admin.ModelAdmin):
@@ -89,7 +89,7 @@ class VotingAdmin(admin.ModelAdmin):
         context = dict(title='Import votings')
         context.update(extra_context or {})
 
-        return render(request, 'import_form.html', context)
+        return render(request, 'voting/import_form.html', context)
 
     def delete_model(self, request, obj):
         votes = Vote.objects.all()

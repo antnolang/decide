@@ -31,9 +31,10 @@ class ImportSenateCandidates(forms.Form):
 
             for row in group.iterrows():
                 count += 1
-                desc_option = row[1][5] + ': ' + \
-                              row[1][0] + ' ' + row[1][1] + ' ' + row[1][2]
+                desc_option = row[1][4] + ': ' + row[1][1] + ', ' + row[1][0]
+                gender = row[1][2]
 
-                quest_option = QuestionOption(number=count, option=desc_option)
+                quest_option = QuestionOption(number=count, option=desc_option,
+                                              gender=gender)
                 quest_option.question = quest
                 quest_option.save()
