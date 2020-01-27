@@ -306,7 +306,7 @@ class VotingViewTestCase(TestCase):
         q2 = Question(desc='Elige un máximo de 2 personas para las listas del '
                            'senado por Sevilla')
         q2.save()
-        opt21 = QuestionOption(question=q2, option='PSOE: García Mata, Mohamed',
+        opt21 = QuestionOption(question=q2, option='PSOE: Núñez Mata, Mohamed',
                                gender='H')
         opt21.save()
         opt22 = QuestionOption(question=q2, option='PP: López Ugarte, Mohamed',
