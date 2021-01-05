@@ -1,7 +1,9 @@
-[![Build Status](https://travis-ci.org/antnolang/decide.svg?branch=master)](https://travis-ci.org/antnolang/decide) [![Codacy Badge](https://api.codacy.com/project/badge/Grade/783fb915f1314df7ab67579941e3628e)](https://www.codacy.com/manual/antnolang/decide?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=antnolang/decide&amp;utm_campaign=Badge_Grade) [![Codacy Badge](https://api.codacy.com/project/badge/Coverage/783fb915f1314df7ab67579941e3628e)](https://www.codacy.com/manual/antnolang/decide?utm_source=github.com&utm_medium=referral&utm_content=antnolang/decide&utm_campaign=Badge_Coverage)
+[![Build Status](https://travis-ci.com/antnolang/decide.svg?branch=master)](https://travis-ci.com/antnolang/decide) [![Codacy Badge](https://api.codacy.com/project/badge/Grade/783fb915f1314df7ab67579941e3628e)](https://www.codacy.com/manual/antnolang/decide?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=antnolang/decide&amp;utm_campaign=Badge_Grade) [![Codacy Badge](https://api.codacy.com/project/badge/Coverage/783fb915f1314df7ab67579941e3628e)](https://www.codacy.com/manual/antnolang/decide?utm_source=github.com&utm_medium=referral&utm_content=antnolang/decide&utm_campaign=Badge_Coverage)
 
 Plataforma voto electrónico educativa
 =====================================
+
+**Proyecto para la asignatura Evolución y Gestión de la Configuración en la Universidad de Sevilla.**
 
 El objetivo de este proyecto es implementar una plataforma de voto
 electrónico seguro, que cumpla una serie de garantías básicas, como la
